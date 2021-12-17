@@ -94,7 +94,7 @@ def checkStartTime(title):
 if not os.path.exists(skipFile): newskip('default', defaultSkip)
 
 
-class Service():
+class Service(xbmc.Monitor):
 
     WINDOW = xbmcgui.Window(10000)
 
@@ -103,6 +103,9 @@ class Service():
         self.skipped = False
 
 
+    def onNotification(self, sender, method, data):
+            if method in ["Player.OnPlay"]:
+                
 
     def ServiceEntryPoint(self):
         monitor = xbmc.Monitor()
