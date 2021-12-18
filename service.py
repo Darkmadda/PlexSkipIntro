@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 '''
-    TvSkipIntro Add-on
-    Copyright (C) 2018 aenema
+    PlexSkipIntro Add-on
+    Copyright (C) 2021 Dinomight
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,13 +17,15 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-import threading
 
-import xbmc,xbmcaddon,xbmcgui, time
+import xbmc,xbmcaddon,xbmcgui
 from plexapi.server import PlexServer
-import asyncio
 from threading import Timer
-
+OK_BUTTON = 201
+NEW_BUTTON = 202
+DISABLE_BUTTON = 210
+ACTION_PREVIOUS_MENU = 10
+ACTION_BACK = 92
 KODI_VERSION = int(xbmc.getInfoLabel("System.BuildVersion").split(".")[0])
 addonInfo = xbmcaddon.Addon().getAddonInfo
 settings = xbmcaddon.Addon().getSetting
@@ -35,32 +37,27 @@ chosen = False
 Dialog = None
 running = False
 Ran = False
+default_timeout = xbmcaddon.Addon().getSettingInt("default_timeout")
 def closeDialog():
     global Dialog
     global timer
     global running
     global Ran
+    global default_timeout
     Dialog.close()
     timer.cancel()
     Ran = True
     running = False
-    timer = threading.Timer(5, closeDialog)
+    timer = Timer(default_timeout, closeDialog)
 
 def timerStart():
     global timer
     global running
     global Ran
-    if not running and not Ran:
-        timer.start()
-        Dialog.show()
-        running = True
 
 
-timer = threading.Timer(5, closeDialog)
-
+timer = Timer(default_timeout, closeDialog)
 class Service(xbmc.Monitor):
-
-    WINDOW = xbmcgui.Window(10000)
 
     def __init__(self, *args):
         addonName = 'Plex TV Skip'
@@ -68,29 +65,21 @@ class Service(xbmc.Monitor):
 
     def onNotification(self, sender, method, data):
             global Ran
+            global introFound
+            global introStartTime
+            global introEndTime
             if method in ["Player.OnSeek"]:
                 Ran = False
             if method in ["Player.OnPlay"]:
-                global introFound
-                global introStartTime
-                global introEndTime
-                global chosen
                 Ran = False
-                chosen = False
                 introFound = False
                 myPlayer = xbmc.Player()  # make Player() a single call.
                 if myPlayer.isPlayingVideo():
                     season_number = myPlayer.getVideoInfoTag().getSeason()
                     episode_number = myPlayer.getVideoInfoTag().getEpisode()
                     show = myPlayer.getVideoInfoTag().getTVShowTitle()
-                    if str(show) == '':
-                        xbmc.log("empty", xbmc.LOGINFO)
-                        return None
-                    xbmc.log(show+"show",xbmc.LOGINFO)
                     baseurl = xbmcaddon.Addon().getSettingString("plex_base_url")
                     token = xbmcaddon.Addon().getSettingString("auth_token")
-                    xbmc.log(baseurl,xbmc.LOGINFO)
-                    xbmc.log(token,xbmc.LOGINFO)
                     plex = PlexServer(baseurl, token)
                     shows = plex.library.section('TV Shows')
                     show = shows.search(show)[0]
@@ -109,6 +98,9 @@ class Service(xbmc.Monitor):
         global introEndTime
         global Ran
         global Dialog
+        global running
+        global timer
+        global default_timeout
         Dialog = CustomDialog('script-dialog.xml', addonPath)
         while not monitor.abortRequested():
             # check every 5 sec
@@ -119,12 +111,16 @@ class Service(xbmc.Monitor):
             if xbmc.Player().isPlaying():
                 if introFound:
                     if xbmc.Player().getTime() > introStartTime and xbmc.Player().getTime() < introEndTime:
-                        timerStart()
-OK_BUTTON = 201
-NEW_BUTTON = 202
-DISABLE_BUTTON = 210
-ACTION_PREVIOUS_MENU = 10
-ACTION_BACK = 92
+                        if not running and not Ran:
+                            timeout = introEndTime - xbmc.Player().getTime()
+                            default_timeout
+                            if timeout > default_timeout:
+                                timeout = default_timeout
+                            timer = Timer(timeout, closeDialog)
+                            timer.start()
+                            Dialog.show()
+                            running = True
+
 class CustomDialog(xbmcgui.WindowXMLDialog):
 
     def __init__(self, xmlFile, resourcePath):
@@ -144,7 +140,6 @@ class CustomDialog(xbmcgui.WindowXMLDialog):
         pass
 
     def onClick(self, control):
-        global chosen
         global introEndTime
         if control == OK_BUTTON:
             xbmc.Player().seekTime(int(introEndTime))
