@@ -1,8 +1,8 @@
-
-﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="script.plexskipintro" version="2021.12.16" name="TV Skip Intro" provider-name="aenema">
 	<requires>
 		<import addon="xbmc.python" version="3.0.0" />
+		<import addon="script.module.requests" version="2.22.0" />
 	</requires>
 	<extension point="xbmc.python.pluginsource" library="main.py">
 		<provides>executable</provides>
@@ -10,12 +10,15 @@
 	<extension point="xbmc.service" library="service.py" start="startup" />
 	<extension point="xbmc.addon.metadata">
         <description>Prompt a Skip Intro dialog Netflix style using plex metadata. Skips intro for your favourite shows</description>
-	
 		<summary lang="en">Skip TV Shows Intro</summary>
 		<platform>all</platform>
 		<forum>-</forum>
 		<website>-</website>
 		<source>-</source>
 		<news>-</news>
+		<assets>
+			<icon>resources/icon.png</icon>
+			<fanart>resources/fanart.jpg</fanart>
+		</assets>
 	</extension>
 </addon>

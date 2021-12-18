@@ -17,163 +17,121 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+import threading
 
-import xbmcvfs,xbmc,xbmcaddon,json,os,xbmcgui, time, re
+import xbmc,xbmcaddon,xbmcgui, time
+from plexapi.server import PlexServer
+import asyncio
+from threading import Timer
 
 KODI_VERSION = int(xbmc.getInfoLabel("System.BuildVersion").split(".")[0])
 addonInfo = xbmcaddon.Addon().getAddonInfo
 settings = xbmcaddon.Addon().getSetting
-profilePath = xbmc.translatePath(addonInfo('profile'))
 addonPath = xbmc.translatePath(addonInfo('path'))
-skipFile = os.path.join(profilePath, 'skipintro.json')
-defaultSkip = settings('default.skip')
-if not os.path.exists(profilePath): xbmcvfs.mkdir(profilePath)
-xbmc.executebuiltin('Notification(Hello World,This is a simple example of notifications,5000,/script.hellow.world.png)')
-def cleantitle(title):
-    if title == None: return
-    title = title.lower()
-    title = re.sub('&#(\d+);', '', title)
-    title = re.sub('(&#[0-9]+)([^;^0-9]+)', '\\1;\\2', title)
-    title = title.replace('&quot;', '\"').replace('&amp;', '&')
-    title = re.sub(r'\<[^>]*\>','', title)
-    title = re.sub('\n|([[].+?[]])|([(].+?[)])|\s(vs|v[.])\s|(:|;|-|"|,|\'|\_|\.|\?)|\(|\)|\[|\]|\{|\}|\s', '', title).lower()
-    return title.lower()
-    
-def updateSkip(title, seconds=defaultSkip, start=0, service=True):
-    with open(skipFile, 'r') as file:
-         json_data = json.load(file)
-         for item in json_data:
-               if cleantitle(item['title']) == cleantitle(title):
-                  item['service'] = service
-                  item['skip'] = seconds
-                  item['start'] = start
-    with open(skipFile, 'w') as file:
-        json.dump(json_data, file, indent=2)
-        
-def newskip(title, seconds, start=0):
-    if seconds == '' or seconds == None: seconds = defaultSkip
-    newIntro = {'title': title, 'service': True, 'skip': seconds, 'start': start}
-    try:
-        with open(skipFile) as f:
-            data = json.load(f)
-    except:
-        data = []
-    for item in data:
-        if cleantitle(title) in cleantitle(item['title']):
-            updateSkip(title, seconds=seconds, start=start, service=True)
-            return
-    data.append(newIntro)
-    with open(skipFile, 'w') as f:
-        json.dump(data, f, indent=2)
+introFound = True
+introStartTime = 0
+introEndTime = 0
+chosen = False
+Dialog = None
+running = False
+Ran = False
+def closeDialog():
+    global Dialog
+    global timer
+    global running
+    global Ran
+    Dialog.close()
+    timer.cancel()
+    Ran = True
+    running = False
+    timer = threading.Timer(5, closeDialog)
 
-def getSkip(title):
-    try:
-        with open(skipFile) as f:
-            data = json.load(f)
-        skip = [i for i in data if i['service'] != False]
-        skip = [i['skip'] for i in skip if cleantitle(i['title']) == cleantitle(title)][0]
-    except: 
-        skip = defaultSkip
-        newskip(title, skip)
-    return  skip
-    
-def checkService(title):
-    try:
-        with open(skipFile) as f: data = json.load(f)
-        skip = [i['service'] for i in data if cleantitle(i['title']) == cleantitle(title)][0]
-    except: skip = True
-    return  skip
+def timerStart():
+    global timer
+    global running
+    global Ran
+    if not running and not Ran:
+        timer.start()
+        Dialog.show()
+        running = True
 
-def checkStartTime(title):
-    try:
-        with open(skipFile) as f: data = json.load(f)
-        start = [i['start'] for i in data if cleantitle(i['title']) == cleantitle(title)][0]
-    except: start = 0
-    return  start
-    
-if not os.path.exists(skipFile): newskip('default', defaultSkip)
 
+timer = threading.Timer(5, closeDialog)
 
 class Service(xbmc.Monitor):
 
     WINDOW = xbmcgui.Window(10000)
 
     def __init__(self, *args):
-        addonName = 'Skip Player'
-        self.skipped = False
+        addonName = 'Plex TV Skip'
 
 
     def onNotification(self, sender, method, data):
+            global Ran
+            if method in ["Player.OnSeek"]:
+                Ran = False
             if method in ["Player.OnPlay"]:
-                
+                global introFound
+                global introStartTime
+                global introEndTime
+                global chosen
+                Ran = False
+                chosen = False
+                introFound = False
+                myPlayer = xbmc.Player()  # make Player() a single call.
+                if myPlayer.isPlayingVideo():
+                    season_number = myPlayer.getVideoInfoTag().getSeason()
+                    episode_number = myPlayer.getVideoInfoTag().getEpisode()
+                    show = myPlayer.getVideoInfoTag().getTVShowTitle()
+                    if str(show) == '':
+                        xbmc.log("empty", xbmc.LOGINFO)
+                        return None
+                    xbmc.log(show+"show",xbmc.LOGINFO)
+                    baseurl = xbmcaddon.Addon().getSettingString("plex_base_url")
+                    token = xbmcaddon.Addon().getSettingString("auth_token")
+                    xbmc.log(baseurl,xbmc.LOGINFO)
+                    xbmc.log(token,xbmc.LOGINFO)
+                    plex = PlexServer(baseurl, token)
+                    shows = plex.library.section('TV Shows')
+                    show = shows.search(show)[0]
+                    episode = show.episode(None, season_number, episode_number)
+                    for marker in episode.markers:
+                        if (marker.type == "intro"):
+                            introFound = True
+                            introStartTime = marker.start / 1000
+                            introEndTime = marker.end / 1000
+
 
     def ServiceEntryPoint(self):
         monitor = xbmc.Monitor()
-
-
+        global introFound
+        global introStartTime
+        global introEndTime
+        global Ran
+        global Dialog
+        Dialog = CustomDialog('script-dialog.xml', addonPath)
         while not monitor.abortRequested():
             # check every 5 sec
-            if monitor.waitForAbort(5):
+            if monitor.waitForAbort(3):
                 # Abort was requested while waiting. We should exit
                 break
+
             if xbmc.Player().isPlaying():
-                try:
-                    playTime = xbmc.Player().getTime()
-
-                    totalTime = xbmc.Player().getTotalTime()
-
-                    self.currentShow = xbmc.getInfoLabel("VideoPlayer.TVShowTitle")
-                    if self.currentShow: 
-                        if playTime > 3250: self.skipped = True
-                        if self.skipped == False: self.SkipIntro(self.currentShow)
-                    print ("CURRENT SHOW PLAYER", currentShow, playTime)
-                except:pass
-            else: self.skipped = False
-                
-    def SkipIntro(self, tvshow):
-        try:
-            if not xbmc.Player().isPlayingVideo(): raise Exception() 
-            
-            time.sleep(2)
-            timeNow = xbmc.Player().getTime()
-            status = checkService(tvshow)
-            
-            if status == False:
-                self.skipped = True
-                raise Exception()
-            startTime = checkStartTime(tvshow)
-            
-            if int(startTime) >= int(timeNow): raise Exception()
-            
-            Dialog = CustomDialog('script-dialog.xml', addonPath, show=tvshow)
-            Dialog.doModal()
-            self.skipped = True
-            del Dialog	
-            
-        except:pass
-
+                if introFound:
+                    if xbmc.Player().getTime() > introStartTime and xbmc.Player().getTime() < introEndTime:
+                        timerStart()
 OK_BUTTON = 201
 NEW_BUTTON = 202
 DISABLE_BUTTON = 210
 ACTION_PREVIOUS_MENU = 10
 ACTION_BACK = 92
-INSTRUCTION_LABEL = 203
-AUTHCODE_LABEL = 204
-WARNING_LABEL = 205
-CENTER_Y = 6
-CENTER_X = 2
-
 class CustomDialog(xbmcgui.WindowXMLDialog):
 
-    def __init__(self, xmlFile, resourcePath, show):
-        self.tvshow = show
+    def __init__(self, xmlFile, resourcePath):
+        None
 
     def onInit(self):
         instuction = ''
-        # self.skipValue = int(getSkip(self.tvshow))
-        # skipLabel = 'SKIP INTRO: %s' % self.skipValue
-        # skipButton = self.getControl(OK_BUTTON)
-        # skipButton.setLabel(skipLabel)
         
     def onAction(self, action):
         if action == ACTION_PREVIOUS_MENU or action == ACTION_BACK:
@@ -186,28 +144,12 @@ class CustomDialog(xbmcgui.WindowXMLDialog):
         pass
 
     def onClick(self, control):
-        print ('onClick: %s' % (control))
-
+        global chosen
+        global introEndTime
         if control == OK_BUTTON:
-            timeNow = xbmc.Player().getTime()
-            skipTotal = int(timeNow) + int(self.skipValue)
-            xbmc.Player().seekTime(int(skipTotal))			
-
-        if control == NEW_BUTTON:
-            dialog = xbmcgui.Dialog()
-            d = dialog.input('Skip Value (seconds)', type=xbmcgui.INPUT_NUMERIC)
-            d2 = 0
-            d2 = dialog.input('Prompt At (seconds)', type=xbmcgui.INPUT_NUMERIC)
-            if d2 == '' or d2 == None: d2 = 0
-            if str(d) != '' and str(d) != '0': newskip(self.tvshow , d , start=d2)
-
-                    
-            
-        if control == DISABLE_BUTTON:
-            updateSkip(self.tvshow, seconds=self.skipValue, service=False)
-            
+            xbmc.Player().seekTime(int(introEndTime))
 
         if control in [OK_BUTTON, NEW_BUTTON, DISABLE_BUTTON]:
             self.close()
-            
+
 Service().ServiceEntryPoint()

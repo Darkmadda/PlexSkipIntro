@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <settings>
-	<category label="GENERALS">
-		<setting id="default.skip" type="slider" label="Default Skip for New Shows" default="45" range="10,120" option="int" />
+	<category label="32001">
+		<setting label="Plex Base Url" type="text" id="plex_base_url" default="http://192.168.0.100:32400"/>
+		<setting label="Authentication Token" type="text" id="auth_token" default="" />
 	</category>
-
-
 </settings>
