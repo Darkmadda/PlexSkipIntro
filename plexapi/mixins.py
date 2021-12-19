@@ -33,7 +33,7 @@ class AdvancedSettingsMixin(object):
         data = {}
         key = '%s/prefs?' % self.key
         preferences = {pref.id: pref for pref in self.preferences() if pref.enumValues}
-        for settingID, value in kwargs.items():
+        for settingID, value in list(kwargs.items()):
             try:
                 pref = preferences[settingID]
             except KeyError:

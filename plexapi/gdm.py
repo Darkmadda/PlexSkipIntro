@@ -44,8 +44,8 @@ class GDM:
         """Return a list of entries that match the search parameters."""
         self.scan()
         return [entry for entry in self.entries
-                if all(item in entry['data'].items()
-                       for item in values.items())]
+                if all(item in list(entry['data'].items()))
+                       for item in list(values.items())]
 
     def update(self, scan_for_clients):
         """Scan for new GDM services.

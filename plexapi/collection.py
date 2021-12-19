@@ -93,17 +93,17 @@ class Collection(PlexPartialObject, AdvancedSettingsMixin, ArtMixin, PosterMixin
         self._filters = None  # cache for self.filters
 
     def __len__(self):  # pragma: no cover
-        return len(self.items())
+        return len(list(self.items()))
 
     def __iter__(self):  # pragma: no cover
-        for item in self.items():
+        for item in list(self.items()):
             yield item
 
     def __contains__(self, other):  # pragma: no cover
-        return any(i.key == other.key for i in self.items())
+        return any(i.key == other.key for i in list(self.items()))
 
     def __getitem__(self, key):  # pragma: no cover
-        return self.items()[key]
+        return list(self.items)()[key]
 
     @property
     def listType(self):
@@ -140,7 +140,7 @@ class Collection(PlexPartialObject, AdvancedSettingsMixin, ArtMixin, PosterMixin
     @property
     @deprecated('use "items" instead', stacklevel=3)
     def children(self):
-        return self.items()
+        return list(self.items())
 
     def filters(self):
         """ Returns the search filter dict for smart collection.
@@ -167,7 +167,7 @@ class Collection(PlexPartialObject, AdvancedSettingsMixin, ArtMixin, PosterMixin
             Raises:
                 :class:`plexapi.exceptions.NotFound`: When the item is not found in the collection.
         """
-        for item in self.items():
+        for item in list(self.items()):
             if item.title.lower() == title.lower():
                 return item
         raise NotFound('Item with title "%s" not found in the collection' % title)
@@ -372,7 +372,7 @@ class Collection(PlexPartialObject, AdvancedSettingsMixin, ArtMixin, PosterMixin
 
     def playQueue(self, *args, **kwargs):
         """ Returns a new :class:`~plexapi.playqueue.PlayQueue` from the collection. """
-        return PlayQueue.create(self._server, self.items(), *args, **kwargs)
+        return PlayQueue.create(self._server, list(self.items()), *args, **kwargs)
 
     @classmethod
     def _create(cls, server, title, section, items):

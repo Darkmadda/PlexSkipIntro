@@ -4,12 +4,9 @@
 		<import addon="xbmc.python" version="3.0.0" />
 		<import addon="script.module.requests" version="2.22.0" />
 	</requires>
-	<extension point="xbmc.python.pluginsource" library="main.py">
-		<provides>executable</provides>
-	</extension>
-	<extension point="xbmc.service" library="service.py" start="startup" />
+	<extension point="xbmc.service" library="service.py"/>
 	<extension point="xbmc.addon.metadata">
-        <description>Prompt a Skip Intro dialog Netflix style using plex metadata. Skips intro for your favourite shows</description>
+        <description lang="en">Prompt a Skip Intro dialog Netflix style using plex metadata. Skips intro for your favourite shows</description>
 		<summary lang="en">Skip TV Shows Intro</summary>
 		<platform>all</platform>
 		<forum>-</forum>

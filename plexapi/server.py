@@ -887,11 +887,11 @@ class PlexServer(PlexObject):
                 params['timespan'] = timespans[timespan]
             except KeyError:
                 raise BadRequest('Invalid timespan specified: %s. '
-                    'Available timespans: %s' % (timespan, ', '.join(timespans.keys())))
+                    'Available timespans: %s' % (timespan, ', '.join(list(timespans.keys()))))
 
         filters = {'accountID', 'at', 'at<', 'at>', 'bytes', 'bytes<', 'bytes>', 'deviceID', 'lan'}
 
-        for key, value in kwargs.items():
+        for key, value in list(kwargs.items()):
             if key not in filters:
                 raise BadRequest('Unknown filter: %s=%s' % (key, value))
             if key.startswith('at'):

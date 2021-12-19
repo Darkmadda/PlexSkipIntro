@@ -66,17 +66,17 @@ class Playlist(PlexPartialObject, Playable, ArtMixin, PosterMixin, SmartFilterMi
         self._filters = None  # cache for self.filters
 
     def __len__(self):  # pragma: no cover
-        return len(self.items())
+        return len(list(self.items()))
 
     def __iter__(self):  # pragma: no cover
-        for item in self.items():
+        for item in list(self.items()):
             yield item
 
     def __contains__(self, other):  # pragma: no cover
-        return any(i.key == other.key for i in self.items())
+        return any(i.key == other.key for i in list(self.items()))
 
     def __getitem__(self, key):  # pragma: no cover
-        return self.items()[key]
+        return list(self.items())[key]
 
     @property
     def thumb(self):
@@ -112,7 +112,7 @@ class Playlist(PlexPartialObject, Playable, ArtMixin, PosterMixin, SmartFilterMi
 
     def _getPlaylistItemID(self, item):
         """ Match an item to a playlist item and return the item playlistItemID. """
-        for _item in self.items():
+        for _item in list(self.items()):
             if _item.ratingKey == item.ratingKey:
                 return _item.playlistItemID
         raise NotFound('Item with title "%s" not found in the playlist' % item.title)
@@ -145,8 +145,8 @@ class Playlist(PlexPartialObject, Playable, ArtMixin, PosterMixin, SmartFilterMi
                 return self._section
         
             # Try to get the library section from the first item in the playlist
-            if self.items():
-                self._section = self.items()[0].section()
+            if list(self.items()):
+                self._section = list(self.items())[0].section()
                 return self._section
 
             raise Unsupported('Unable to determine the library section')
@@ -162,7 +162,7 @@ class Playlist(PlexPartialObject, Playable, ArtMixin, PosterMixin, SmartFilterMi
             Raises:
                 :class:`plexapi.exceptions.NotFound`: When the item is not found in the playlist.
         """
-        for item in self.items():
+        for item in list(self.items()):
             if item.title.lower() == title.lower():
                 return item
         raise NotFound('Item with title "%s" not found in the playlist' % title)
@@ -409,7 +409,7 @@ class Playlist(PlexPartialObject, Playable, ArtMixin, PosterMixin, SmartFilterMi
                 user (str): Username, email or user id of the user to copy the playlist to.
         """
         userServer = self._server.switchUser(user)
-        return self.create(server=userServer, title=self.title, items=self.items())
+        return self.create(server=userServer, title=self.title, items=list(self.items()))
 
     def sync(self, videoQuality=None, photoResolution=None, audioBitrate=None, client=None, clientId=None, limit=None,
              unwatched=False, title=None):

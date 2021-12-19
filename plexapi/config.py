@@ -43,7 +43,7 @@ class PlexConfig(ConfigParser):
         """ Returns all configuration values as a dictionary. """
         config = defaultdict(dict)
         for section in self._sections:
-            for name, value in self._sections[section].items():
+            for name, value in list(self._sections[section].items()):
                 if name != '__name__':
                     config[section.lower()][name.lower()] = value
         return dict(config)

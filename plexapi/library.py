@@ -114,7 +114,7 @@ class Library(PlexObject):
             args['title'] = title
         if libtype:
             args['type'] = utils.searchType(libtype)
-        for attr, value in kwargs.items():
+        for attr, value in list(kwargs.items()):
             args[attr] = value
         key = '/library/all%s' % utils.joinArgs(args)
         return self.fetchItems(key)
@@ -582,7 +582,7 @@ class LibrarySection(PlexObject):
             else:
                 idEnums[setting.id] = {0: False, 1: True}
 
-        for settingID, value in kwargs.items():
+        for settingID, value in list(kwargs.items()):
             try:
                 enums = idEnums[settingID]
             except KeyError:
@@ -1032,9 +1032,9 @@ class LibrarySection(PlexObject):
 
         validatedFilters = []
 
-        for field, values in filters.items():
+        for field, values in list(filters.items()):
             if field.lower() in {'and', 'or'}:
-                if len(filters.items()) > 1:
+                if len(list(filters.items())) > 1:
                     raise BadRequest('Multiple keys in the same dictionary with and/or is not allowed.')
                 if not isinstance(values, list):
                     raise BadRequest('Value for and/or keys must be a list of dictionaries.')

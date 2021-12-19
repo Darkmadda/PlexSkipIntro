@@ -155,7 +155,7 @@ def searchType(libtype):
             :exc:`~plexapi.exceptions.NotFound`: Unknown libtype
     """
     libtype = str(libtype)
-    if libtype in [str(v) for v in SEARCHTYPES.values()]:
+    if libtype in [str(v) for v in list(SEARCHTYPES.values())]:
         return libtype
     if SEARCHTYPES.get(libtype) is not None:
         return SEARCHTYPES[libtype]
@@ -174,7 +174,7 @@ def reverseSearchType(libtype):
     if libtype in SEARCHTYPES:
         return libtype
     libtype = int(libtype)
-    for k, v in SEARCHTYPES.items():
+    for k, v in list(SEARCHTYPES.items()):
         if libtype == v:
             return k
     raise NotFound('Unknown libtype: %s' % libtype)
@@ -469,7 +469,7 @@ def choose(msg, items, attr):  # pragma: no cover
         try:
             inp = input('%s: ' % msg)
             if any(s in inp for s in (':', '::', '-')):
-                idx = slice(*map(lambda x: int(x.strip()) if x.strip() else None, inp.split(':')))
+                idx = slice(*[int(x.strip()) if x.strip() else None for x in inp.split(':')])
                 return items[idx]
             else:
                 return items[int(inp)]

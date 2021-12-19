@@ -111,7 +111,7 @@ class PlexObject(object):
         details_key = self.key
         if details_key and hasattr(self, '_INCLUDES'):
             includes = {}
-            for k, v in self._INCLUDES.items():
+            for k, v in list(self._INCLUDES.items()):
                 value = kwargs.get(k, v)
                 if value not in [False, 0, '0']:
                     includes[k] = 1 if value is True else value
@@ -355,7 +355,7 @@ class PlexObject(object):
 
     def _checkAttrs(self, elem, **kwargs):
         attrsFound = {}
-        for attr, query in kwargs.items():
+        for attr, query in list(kwargs.items()):
             attr, op, operator = self._getAttrOperator(attr)
             values = self._getAttrValue(elem, attr)
             # special case query in (None, 0, '') to include missing attr
@@ -372,7 +372,7 @@ class PlexObject(object):
         return all(attrsFound.values())
 
     def _getAttrOperator(self, attr):
-        for op, operator in OPERATORS.items():
+        for op, operator in list(OPERATORS.items()):
             if attr.endswith('__%s' % op):
                 attr = attr.rsplit('__', 1)[0]
                 return attr, op, operator
@@ -393,7 +393,7 @@ class PlexObject(object):
         if attr.lower() == 'etag':
             return [elem.tag]
         # loop through attrs so we can perform case-insensative match
-        for _attr, value in elem.attrib.items():
+        for _attr, value in list(elem.attrib.items()):
             if attr.lower() == _attr.lower():
                 return [value]
         return []
@@ -659,10 +659,10 @@ class Playable(object):
             'videoResolution': vr if re.match(r'^\d+x\d+$', vr) else None
         }
         # remove None values
-        params = {k: v for k, v in params.items() if v is not None}
+        params = {k: v for k, v in list(params.items()) if v is not None}
         streamtype = 'audio' if self.TYPE in ('track', 'album') else 'video'
         # sort the keys since the randomness fucks with my tests..
-        sorted_params = sorted(params.items(), key=lambda val: val[0])
+        sorted_params = sorted(list(params.items()), key=lambda val: val[0])
         return self._server.url('/%s/:/transcode/universal/start.m3u8?%s' %
             (streamtype, urlencode(sorted_params)), includeToken=True)
 
