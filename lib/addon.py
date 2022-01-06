@@ -2,6 +2,8 @@ import xbmc, xbmcaddon, xbmcgui
 from threading import Timer
 from plexapi.server import PlexServer
 from lib.definitions import *
+import pprint
+import time
 
 def closeDialog():
     global Dialog
@@ -16,6 +18,7 @@ def closeDialog():
     timer = Timer(default_timeout, closeDialog)
 
 def onPlay():
+    xbmc.log("PLAY========***************",xbmc.LOGINFO)
     global Ran
     global introFound
     global introStartTime
@@ -23,6 +26,8 @@ def onPlay():
     Ran = False
     introFound = False
     myPlayer = xbmc.Player()  # make Player() a single call.
+    while not myPlayer.isPlayingVideo():
+        time.sleep(1)
     if myPlayer.isPlayingVideo():
         season_number = myPlayer.getVideoInfoTag().getSeason()
         episode_number = myPlayer.getVideoInfoTag().getEpisode()

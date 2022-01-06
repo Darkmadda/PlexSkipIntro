@@ -11,7 +11,6 @@ class Service(xbmc.Monitor):
                 onSeek()
             if method in ["Player.OnPlay"]:
                 onPlay()
-
     def ServiceEntryPoint(self):
         monitor()
 
