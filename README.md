@@ -5,7 +5,7 @@ Kodi plugin that uses plex to get intro start/end times and provides a button to
 ## Name
 KodiPlexSkipIntro
 
-[![.](https://gitlab.com/dinomight/KodiPlexSkipIntro/-/raw/main/resources/media/plexskipintroSS.png)](#)
+[![.](https://github.com/Darkmadda/PlexSkipIntro/blob/main/resources/media/plexskipintroSS.png?raw=true)](#)
 ## Description
 This add-on will display a button on screen when an tv intro starts allowing you to skip the intro. The button will display for 10 seconds (this period can be changed in the settings)
 
@@ -17,7 +17,7 @@ Wait for intro to start and click the skip intro if desired or wait for the time
 
 You will need to get a plex auth token and the base url for plex. look [here](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/) to find out how to obtain this (the screenshot will help)
 
-[![.](https://gitlab.com/dinomight/KodiPlexSkipIntro/-/raw/main/resources/media/plexskipintroTokenSS.png)](#)
+[![.](https://github.com/Darkmadda/PlexSkipIntro/blob/main/resources/media/plexskipintroTokenSS.png?raw=true)](#)
 
 ## License
 GNU GENERAL PUBLIC LICENSE
